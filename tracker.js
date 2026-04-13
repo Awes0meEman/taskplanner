@@ -305,6 +305,7 @@ const STORAGE_KEY  = 'dp_league_done_v1';
 const ORDER_KEY    = 'dp_league_order_v1';
 const IMPORTED_KEY = 'dp_league_imported_v1';
 const EXTRA_KEY    = 'dp_league_extra_v1';
+const COLLAPSE_KEY = 'dp_league_collapse_v1';
 
 let done           = new Set();
 let hideDone       = false;
@@ -313,6 +314,7 @@ let activeFilter   = 'all';
 let taskOrder      = {};   // { [phaseId]: [taskName, ...] }
 let importedPhases = [];   // phases created via importer
 let extraTasks     = {};   // { [phaseId]: [task, ...] } — tasks added to hardcoded phases
+let collapseState  = {};   // { [phaseId]: true } — collapsed phases
 
 /* ── Persistence ─────────────────────────────────────────── */
 function loadDone() {
@@ -359,6 +361,28 @@ function loadExtraTasks() {
 
 function saveExtraTasks() {
   try { localStorage.setItem(EXTRA_KEY, JSON.stringify(extraTasks)); } catch (e) {}
+}
+
+function loadCollapseState() {
+  try { collapseState = JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '{}'); }
+  catch (e) { collapseState = {}; }
+}
+
+function saveCollapseState() {
+  try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapseState)); } catch (e) {}
+}
+
+function togglePhase(phaseId) {
+  const section = document.getElementById('phase-section-' + phaseId);
+  if (!section) return;
+  if (collapseState[phaseId]) {
+    delete collapseState[phaseId];
+    section.classList.remove('collapsed');
+  } else {
+    collapseState[phaseId] = true;
+    section.classList.add('collapsed');
+  }
+  saveCollapseState();
 }
 
 /* ── Helpers ─────────────────────────────────────────────── */
@@ -832,17 +856,18 @@ function buildPhaseSection(p) {
   const total  = tasks.reduce((s, t) => s + t.pts, 0);
 
   const section = document.createElement('div');
-  section.className = 'phase';
+  section.className = 'phase' + (collapseState[p.id] ? ' collapsed' : '');
   section.id        = 'phase-section-' + p.id;
   section.innerHTML = `
-    <div class="phase-header">
+    <div class="phase-header" onclick="togglePhase('${p.id}')">
       <span class="phase-number">${p.num}</span>
       <span class="phase-title">${p.title}</span>
       <span class="phase-pts-info" id="phase-pts-${p.id}">
         <span class="earned">${earned.toLocaleString()}</span> / ${total.toLocaleString()} pts
       </span>
+      <span class="phase-chevron">▾</span>
     </div>
-    <div class="task-list" id="tl-${p.id}"></div>
+    <div class="task-list-wrap"><div class="task-list" id="tl-${p.id}"></div></div>
   `;
   container.appendChild(section);
 
@@ -859,6 +884,7 @@ loadDone();
 loadOrder();
 loadImportedPhases();
 loadExtraTasks();
+loadCollapseState();
 buildFilters();
 buildPhases();
 updateStats();

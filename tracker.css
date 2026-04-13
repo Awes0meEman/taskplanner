@@ -245,7 +245,11 @@ h1 span { color: var(--accent); }
   margin-bottom: 1rem;
   padding-bottom: 0.6rem;
   border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
 }
+
+.phase-header:hover .phase-title { color: var(--text2); }
 
 .phase-number {
   font-family: 'Cinzel', serif;
@@ -267,6 +271,34 @@ h1 span { color: var(--accent); }
   font-size: 13px;
   color: var(--text3);
   flex-shrink: 0;
+}
+
+.phase-chevron {
+  font-size: 13px;
+  color: var(--text3);
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: transform 0.22s ease, color 0.15s;
+  line-height: 1;
+  align-self: center;
+}
+
+.phase-header:hover .phase-chevron { color: var(--text2); }
+
+.phase.collapsed .phase-chevron { transform: rotate(-90deg); }
+
+/* Collapse animation */
+.task-list-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.phase.collapsed .task-list-wrap { grid-template-rows: 0fr; }
+
+.task-list-wrap > .task-list {
+  overflow: hidden;
+  min-height: 0;
 }
 
 .phase-pts-info .earned { color: var(--gold); }
