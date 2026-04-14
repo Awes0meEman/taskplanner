@@ -1,3 +1,20 @@
+/* ============================================================
+   tracker.css — WCAG AA Compliant Version
+   
+   CONTRAST CHANGES SUMMARY:
+   --text3:   #7a5f52 → #a08878  (raised to ≥4.5:1 on --bg/--bg2)
+   --text2:   #b89a87 → #c8aa97  (slight raise for edge cases)
+   --pts-10:  #6b7280 → #9ca3af  (raised to ≥4.5:1 on dark bg)
+   --accent:  #c4405a → #e05575  (raised for text uses on dark bg)
+   --accent2: #9c2d45 → #b03355  (raised for text uses on dark bg)
+   --gold2:   #a07830 → #b8923a  (used as text, raised contrast)
+   --green:   #5a9e6f → #6ab87f  (checkmark on green bg → white used instead)
+   stat-label color raised to --text2 level
+   form-label / .preview-header raised to --text2 level
+   .header-sub raised from --text3 to new --text3
+   .help-section-title raised
+   ============================================================ */
+
 :root {
   --bg:           #0a0608;
   --bg2:          #120d10;
