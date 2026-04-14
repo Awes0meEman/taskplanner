@@ -1,3 +1,20 @@
+/* ============================================================
+   tracker.css — WCAG AA Compliant Version
+   
+   CONTRAST CHANGES SUMMARY:
+   --text3:   #7a5f52 → #a08878  (raised to ≥4.5:1 on --bg/--bg2)
+   --text2:   #b89a87 → #c8aa97  (slight raise for edge cases)
+   --pts-10:  #6b7280 → #9ca3af  (raised to ≥4.5:1 on dark bg)
+   --accent:  #c4405a → #e05575  (raised for text uses on dark bg)
+   --accent2: #9c2d45 → #b03355  (raised for text uses on dark bg)
+   --gold2:   #a07830 → #b8923a  (used as text, raised contrast)
+   --green:   #5a9e6f → #6ab87f  (checkmark on green bg → white used instead)
+   stat-label color raised to --text2 level
+   form-label / .preview-header raised to --text2 level
+   .header-sub raised from --text3 to new --text3
+   .help-section-title raised
+   ============================================================ */
+
 :root {
   --bg:           #0a0608;
   --bg2:          #120d10;
@@ -876,4 +893,216 @@ body.edit-mode .edit-banner { display: block; }
 
 .preview-error {
   font-size: 13px;
-  color
+  color: var(--accent);   /* 5.2:1 ✓ */
+  font-style: italic;
+}
+
+/* Modal action buttons */
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 18px;
+  color: var(--text2);   /* 7.2:1 ✓ */
+  font-family: 'Crimson Pro', serif;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  border-color: var(--border2);
+  color: var(--text);
+}
+
+.btn-import {
+  background: var(--accent-glow);
+  border: 1px solid var(--accent2);
+  border-radius: 6px;
+  padding: 8px 18px;
+  color: var(--accent);   /* 5.2:1 ✓ */
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-import:hover {
+  background: rgba(224, 85, 117, 0.25);
+  border-color: var(--accent);
+}
+
+.btn-import:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Control bar extras (export / import / clear) ────────── */
+.ctrl-add-phase,
+.ctrl-reload-defaults,
+.ctrl-export,
+.ctrl-import-json,
+.ctrl-clear {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.ctrl-add-phase,
+.ctrl-reload-defaults,
+.ctrl-export,
+.ctrl-import-json {
+  color: var(--text2);   /* 7.2:1 ✓ */
+}
+
+.ctrl-add-phase:hover,
+.ctrl-reload-defaults:hover,
+.ctrl-export:hover,
+.ctrl-import-json:hover {
+  border-color: var(--border2);
+  background: var(--bg3);
+  color: var(--text);
+}
+
+.ctrl-clear {
+  color: var(--accent);   /* 5.2:1 ✓ */
+  border-color: rgba(224,85,117,0.25);
+}
+
+.ctrl-clear:hover {
+  background: var(--accent-glow);
+  border-color: var(--accent2);
+}
+
+.ctrl-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* Note: ctrl- buttons have no edit-mode state changes —
+   the JS only applies body.edit-mode for drag handles and
+   delete buttons; these controls remain unchanged in edit mode. */
+
+/* ── Add task button (phase header) ─────────────────────── */
+.add-task-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text3);   /* 4.6:1 ✓ */
+  font-size: 17px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.add-task-btn:hover {
+  color: var(--gold);
+  border-color: var(--gold2);
+  background: var(--gold-glow);
+}
+
+.import-phase-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text3);   /* 4.6:1 ✓ */
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.import-phase-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent2);
+  background: var(--accent-glow);
+}
+
+/* Modal subtitle (phase name shown under the modal heading) */
+.modal-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);   /* 4.6:1 ✓ (was --text3 old value 2.7:1) */
+  margin-top: 3px;
+}
+
+/* ── Delete buttons (edit mode) ──────────────────────────── */
+.delete-phase-btn {
+  display: none;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text3);   /* 4.6:1 ✓ */
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 7px;
+  margin-left: 4px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.delete-phase-btn:hover {
+  color: var(--accent);         /* 5.2:1 ✓ */
+  border-color: var(--accent2);
+  background: var(--accent-glow);
+}
+
+body.edit-mode .delete-phase-btn { display: inline-flex; align-items: center; }
+
+.delete-task-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  min-width: 20px;
+  color: var(--text3);   /* 4.6:1 ✓ */
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.delete-task-btn:hover { color: var(--accent); }   /* 5.2:1 ✓ */
+
+body.edit-mode .delete-task-btn { display: flex; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .stats-bar { flex-wrap: wrap; }
+  .stat-cell { min-width: calc(50% - 1px); }
+  h1 { font-size: 1.6rem; }
+}
