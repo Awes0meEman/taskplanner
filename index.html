@@ -54,12 +54,33 @@
     </button>
     <button class="toggle-edit" id="editBtn" onclick="toggleEditMode()">
       <span class="edit-icon">⠿</span>
-      Reorder
+      Edit
     </button>
     <button class="toggle-import" onclick="openImportModal()">
       <span class="import-icon">+</span>
       Import CSV
     </button>
+    <button class="ctrl-add-phase" onclick="openAddPhaseModal()" title="Create a new empty phase">
+      <span class="ctrl-icon">+</span>
+      Add Phase
+    </button>
+    <button class="ctrl-reload-defaults" onclick="reloadDefaults()" title="Restore the original hardcoded phases">
+      <span class="ctrl-icon">↺</span>
+      Defaults
+    </button>
+    <button class="ctrl-export" onclick="exportJSON()" title="Download all phases and progress as a JSON file">
+      <span class="ctrl-icon">↓</span>
+      Export
+    </button>
+    <button class="ctrl-import-json" onclick="importJSON()" title="Restore from a previously exported JSON file">
+      <span class="ctrl-icon">↑</span>
+      Import
+    </button>
+    <button class="ctrl-clear" onclick="clearAll()" title="Remove all phases and reset progress">
+      <span class="ctrl-icon">✕</span>
+      Clear All
+    </button>
+    <input type="file" id="jsonFileInput" accept=".json,application/json" style="display:none" onchange="onJSONFileSelected(event)">
   </div>
 
   <div class="edit-banner">✦ Edit mode — drag tasks to reorder ✦</div>
@@ -103,9 +124,9 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">CSV Data <span class="form-hint">— columns: name, desc, req, pts</span></label>
+        <label class="form-label">CSV Data <span class="form-hint">— columns: name, desc, req, pts (pts optional)</span></label>
         <textarea class="form-textarea" id="importCSV" oninput="onCSVInput()"
-          placeholder="Complete the Tutorial,Do the tutorial,,10&#10;Defeat a Chicken,Kill a chicken,,10&#10;&quot;Defeat a Giant, Slowly&quot;,Kill with patience,,30"></textarea>
+          placeholder="Complete the Tutorial,Do the tutorial,,10&#10;Defeat a Chicken,Kill a chicken,,10&#10;&quot;Defeat a Giant, Slowly&quot;,Kill with patience,,&#10;No Points Task,This task has no points,,"></textarea>
       </div>
       <div id="importPreview"></div>
       <div class="form-error" id="importError"></div>
@@ -113,6 +134,86 @@
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeImportModal()">Cancel</button>
       <button class="btn-import" id="importBtn" disabled onclick="doImport()">Import Tasks</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Phase Modal -->
+<div class="modal-overlay" id="addPhaseOverlay" onclick="closeAddPhaseModal(event)">
+  <div class="modal" id="addPhaseModal">
+    <div class="modal-header">
+      <h2>Add Phase</h2>
+      <button class="modal-close" onclick="closeAddPhaseModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Label <span class="form-hint">— e.g. Phase 08</span></label>
+        <input type="text" class="form-input" id="addPhaseNum" placeholder="Phase 08" onkeydown="if(event.key==='Enter')doAddPhase()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Title <span class="form-hint">— required</span></label>
+        <input type="text" class="form-input" id="addPhaseTitle" placeholder="e.g. Wilderness Tasks" onkeydown="if(event.key==='Enter')doAddPhase()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tag <span class="form-hint">— used for filtering</span></label>
+        <input type="text" class="form-input" id="addPhaseTag" placeholder="general" list="addPhaseTagList" onkeydown="if(event.key==='Enter')doAddPhase()">
+        <datalist id="addPhaseTagList">
+          <option value="general">
+          <option value="varlamore">
+          <option value="karamja">
+          <option value="skilling">
+          <option value="combat">
+          <option value="endgame">
+        </datalist>
+      </div>
+      <div class="form-error" id="addPhaseError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAddPhaseModal()">Cancel</button>
+      <button class="btn-import" onclick="doAddPhase()">Add Phase</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="addTaskOverlay" onclick="closeAddTaskModal(event)">
+  <div class="modal" id="addTaskModal">
+    <div class="modal-header">
+      <div>
+        <h2>Add Task</h2>
+        <div class="modal-subtitle" id="addTaskPhaseName"></div>
+      </div>
+      <button class="modal-close" onclick="closeAddTaskModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Name <span class="form-hint">— required</span></label>
+        <input type="text" class="form-input" id="addTaskName" placeholder="e.g. Defeat a Hill Giant" onkeydown="if(event.key==='Enter')doAddTask()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description <span class="form-hint">— required</span></label>
+        <input type="text" class="form-input" id="addTaskDesc" placeholder="e.g. Kill a Hill Giant." onkeydown="if(event.key==='Enter')doAddTask()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Requirement <span class="form-hint">— optional</span></label>
+        <input type="text" class="form-input" id="addTaskReq" placeholder="e.g. 40 Attack" onkeydown="if(event.key==='Enter')doAddTask()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Points <span class="form-hint">— optional</span></label>
+        <select class="form-select" id="addTaskPts">
+          <option value="">— No points —</option>
+          <option value="10">10</option>
+          <option value="30">30</option>
+          <option value="80">80</option>
+          <option value="200">200</option>
+          <option value="400">400</option>
+        </select>
+      </div>
+      <div class="form-error" id="addTaskError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAddTaskModal()">Cancel</button>
+      <button class="btn-import" onclick="doAddTask()">Add Task</button>
     </div>
   </div>
 </div>

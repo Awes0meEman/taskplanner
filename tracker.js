@@ -301,11 +301,13 @@ const PHASES = [
 ];
 
 /* ── State ───────────────────────────────────────────────── */
-const STORAGE_KEY  = 'dp_league_done_v1';
-const ORDER_KEY    = 'dp_league_order_v1';
-const IMPORTED_KEY = 'dp_league_imported_v1';
-const EXTRA_KEY    = 'dp_league_extra_v1';
-const COLLAPSE_KEY = 'dp_league_collapse_v1';
+const STORAGE_KEY        = 'dp_league_done_v1';
+const ORDER_KEY          = 'dp_league_order_v1';
+const IMPORTED_KEY       = 'dp_league_imported_v1';
+const EXTRA_KEY          = 'dp_league_extra_v1';
+const COLLAPSE_KEY       = 'dp_league_collapse_v1';
+const DELETED_PHASES_KEY = 'dp_league_deleted_phases_v1';
+const DELETED_TASKS_KEY  = 'dp_league_deleted_tasks_v1';
 
 let done           = new Set();
 let hideDone       = false;
@@ -315,6 +317,8 @@ let taskOrder      = {};   // { [phaseId]: [taskName, ...] }
 let importedPhases = [];   // phases created via importer
 let extraTasks     = {};   // { [phaseId]: [task, ...] } — tasks added to hardcoded phases
 let collapseState  = {};   // { [phaseId]: true } — collapsed phases
+let deletedPhases  = new Set();  // IDs of phases that have been deleted
+let deletedTasks   = new Set();  // "phaseId::taskName" keys for deleted tasks
 
 /* ── Persistence ─────────────────────────────────────────── */
 function loadDone() {
@@ -372,6 +376,30 @@ function saveCollapseState() {
   try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapseState)); } catch (e) {}
 }
 
+function loadDeletedState() {
+  try { deletedPhases = new Set(JSON.parse(localStorage.getItem(DELETED_PHASES_KEY) || '[]')); }
+  catch (e) { deletedPhases = new Set(); }
+  try { deletedTasks = new Set(JSON.parse(localStorage.getItem(DELETED_TASKS_KEY) || '[]')); }
+  catch (e) { deletedTasks = new Set(); }
+}
+
+function saveDeletedPhases() {
+  try { localStorage.setItem(DELETED_PHASES_KEY, JSON.stringify([...deletedPhases])); } catch (e) {}
+}
+
+function saveDeletedTasks() {
+  try { localStorage.setItem(DELETED_TASKS_KEY, JSON.stringify([...deletedTasks])); } catch (e) {}
+}
+
+function applyDeletedState() {
+  for (let i = PHASES.length - 1; i >= 0; i--) {
+    if (deletedPhases.has(PHASES[i].id)) PHASES.splice(i, 1);
+  }
+  for (const p of PHASES) {
+    p.tasks = p.tasks.filter(t => !deletedTasks.has(taskKey(p.id, t.name)));
+  }
+}
+
 function togglePhase(phaseId) {
   const section = document.getElementById('phase-section-' + phaseId);
   if (!section) return;
@@ -389,10 +417,11 @@ function togglePhase(phaseId) {
 function taskKey(phaseId, taskName) { return phaseId + '::' + taskName; }
 
 function ptsClass(pts) {
-  if (pts >= 400) return 'pts-400';
-  if (pts >= 200) return 'pts-200';
-  if (pts >= 80)  return 'pts-80';
-  if (pts >= 30)  return 'pts-30';
+  if (!pts)        return '';
+  if (pts >= 400)  return 'pts-400';
+  if (pts >= 200)  return 'pts-200';
+  if (pts >= 80)   return 'pts-80';
+  if (pts >= 30)   return 'pts-30';
   return 'pts-10';
 }
 
@@ -411,9 +440,9 @@ function calcStats() {
   let totalPts = 0, totalTasks = 0, earnedPts = 0, doneTasks = 0;
   for (const p of PHASES) {
     for (const t of p.tasks) {
-      totalPts += t.pts;
+      totalPts += (t.pts || 0);
       totalTasks++;
-      if (done.has(taskKey(p.id, t.name))) { earnedPts += t.pts; doneTasks++; }
+      if (done.has(taskKey(p.id, t.name))) { earnedPts += (t.pts || 0); doneTasks++; }
     }
   }
   return { totalPts, totalTasks, earnedPts, doneTasks };
@@ -437,8 +466,8 @@ function updatePhaseTotals() {
     if (!el) continue;
     let earned = 0, total = 0;
     for (const t of p.tasks) {
-      total += t.pts;
-      if (done.has(taskKey(p.id, t.name))) earned += t.pts;
+      total += (t.pts || 0);
+      if (done.has(taskKey(p.id, t.name))) earned += (t.pts || 0);
     }
     el.innerHTML = '<span class="earned">' + earned.toLocaleString() +
                    '</span> / ' + total.toLocaleString() + ' pts';
@@ -513,6 +542,83 @@ function toggleEditMode() {
   }
 }
 
+/* ── Delete phase / task ─────────────────────────────────── */
+function deletePhase(phaseId) {
+  const phase = PHASES.find(p => p.id === phaseId);
+  if (!phase) return;
+  const taskCount = phase.tasks.length;
+  if (!confirm(`Delete phase "${phase.title}" and all ${taskCount} task(s)? This cannot be undone.`)) return;
+
+  // Remove from PHASES
+  const idx = PHASES.findIndex(p => p.id === phaseId);
+  if (idx !== -1) PHASES.splice(idx, 1);
+
+  // Clean up done entries
+  for (const key of [...done]) {
+    if (key.startsWith(phaseId + '::')) done.delete(key);
+  }
+  saveDone();
+
+  // Clean up task order
+  delete taskOrder[phaseId];
+  try { localStorage.setItem(ORDER_KEY, JSON.stringify(taskOrder)); } catch (e) {}
+
+  // Persist deletion
+  const impIdx = importedPhases.findIndex(p => p.id === phaseId);
+  if (impIdx !== -1) {
+    importedPhases.splice(impIdx, 1);
+    saveImportedPhases();
+  } else {
+    deletedPhases.add(phaseId);
+    saveDeletedPhases();
+    delete extraTasks[phaseId];
+    saveExtraTasks();
+  }
+
+  // Remove DOM element
+  const section = document.getElementById('phase-section-' + phaseId);
+  if (section) section.remove();
+
+  updateStats();
+}
+
+function deleteTask(phaseId, taskName, itemEl) {
+  if (!confirm(`Delete task "${taskName}"? This cannot be undone.`)) return;
+
+  const phase = PHASES.find(p => p.id === phaseId);
+  if (phase) {
+    const tIdx = phase.tasks.findIndex(t => t.name === taskName);
+    if (tIdx !== -1) phase.tasks.splice(tIdx, 1);
+  }
+
+  const key = taskKey(phaseId, taskName);
+  done.delete(key);
+  saveDone();
+
+  // Clean up task order
+  if (taskOrder[phaseId]) {
+    taskOrder[phaseId] = taskOrder[phaseId].filter(n => n !== taskName);
+    try { localStorage.setItem(ORDER_KEY, JSON.stringify(taskOrder)); } catch (e) {}
+  }
+
+  // Persist deletion
+  const isImportedPhase = importedPhases.some(p => p.id === phaseId);
+  if (isImportedPhase) {
+    saveImportedPhases();
+  } else if (extraTasks[phaseId] && extraTasks[phaseId].some(t => t.name === taskName)) {
+    extraTasks[phaseId] = extraTasks[phaseId].filter(t => t.name !== taskName);
+    saveExtraTasks();
+  } else {
+    deletedTasks.add(key);
+    saveDeletedTasks();
+  }
+
+  if (itemEl) itemEl.remove();
+
+  updateStats();
+  updatePhaseTotals();
+}
+
 /* ── CSV parsing ─────────────────────────────────────────── */
 function splitCSVLine(line) {
   const result = [];
@@ -546,15 +652,19 @@ function parseCSV(text) {
   if (firstField === 'name' || firstField === 'task') startIdx = 1;
 
   for (let i = startIdx; i < lines.length; i++) {
-    const f    = splitCSVLine(lines[i]);
-    const name = (f[0] || '').trim();
-    const desc = (f[1] || '').trim();
-    const req  = (f[2] || '').trim() || null;
-    const pts  = parseInt(f[3], 10);
+    const f      = splitCSVLine(lines[i]);
+    const name   = (f[0] || '').trim();
+    const desc   = (f[1] || '').trim();
+    const req    = (f[2] || '').trim() || null;
+    const ptsRaw = (f[3] || '').trim();
+    const pts    = ptsRaw ? parseInt(ptsRaw, 10) : null;
 
-    if (!name)              { errors.push(`Row ${i + 1}: name is required`);              continue; }
-    if (!desc)              { errors.push(`Row ${i + 1}: desc is required`);              continue; }
-    if (!VALID_PTS.has(pts)){ errors.push(`Row ${i + 1}: pts must be 10, 30, 80, 200, or 400`); continue; }
+    if (!name) { errors.push(`Row ${i + 1}: name is required`); continue; }
+    if (!desc) { errors.push(`Row ${i + 1}: desc is required`); continue; }
+    if (pts !== null && !VALID_PTS.has(pts)) {
+      errors.push(`Row ${i + 1}: pts must be empty or one of 10, 30, 80, 200, 400`);
+      continue;
+    }
 
     tasks.push({ name, desc, req, pts });
   }
@@ -562,7 +672,7 @@ function parseCSV(text) {
 }
 
 /* ── Import modal ────────────────────────────────────────── */
-function openImportModal() {
+function openImportModal(phaseId) {
   const sel = document.getElementById('importPhaseSelect');
   sel.innerHTML = '';
   const newOpt = document.createElement('option');
@@ -575,7 +685,7 @@ function openImportModal() {
     opt.textContent = p.num + ' — ' + p.title;
     sel.appendChild(opt);
   }
-  sel.value = '__new__';
+  sel.value = phaseId && [...sel.options].some(o => o.value === phaseId) ? phaseId : '__new__';
   onPhaseSelectChange();
   document.getElementById('importOverlay').classList.add('open');
 }
@@ -617,9 +727,10 @@ function updateImportPreview() {
     html += `<div class="preview-header">${tasks.length} task${tasks.length !== 1 ? 's' : ''} ready to import</div>`;
     html += '<div class="preview-list">';
     for (const t of tasks) {
+      const badge = t.pts ? `<span class="pts-badge ${ptsClass(t.pts)}">${t.pts}</span>` : '';
       html += `<div class="preview-row">
         <span class="preview-name">${t.name}</span>
-        <span class="pts-badge ${ptsClass(t.pts)}">${t.pts}</span>
+        ${badge}
       </div>`;
     }
     html += '</div>';
@@ -729,10 +840,27 @@ function attachDragHandlers(item) {
 
 function startDrag(item, startX, startY) {
   dragSrc = item;
+
+  // Measure and clone BEFORE adding .dragging so the ghost doesn't inherit opacity:0
+  const rect    = item.getBoundingClientRect();
+  const offsetX = startX - rect.left;
+  const offsetY = startY - rect.top;
+
+  const ghost = item.cloneNode(true);
+  ghost.classList.add('drag-ghost');
+
   item.classList.add('dragging');
+  ghost.style.width = rect.width + 'px';
+  ghost.style.left  = rect.left + 'px';
+  ghost.style.top   = rect.top  + 'px';
+  document.body.appendChild(ghost);
 
   const onMove = (cx, cy) => {
     if (!dragSrc) return;
+
+    ghost.style.left = (cx - offsetX) + 'px';
+    ghost.style.top  = (cy - offsetY) + 'px';
+
     let targetList = null;
     for (const l of document.querySelectorAll('.task-list')) {
       const r = l.getBoundingClientRect();
@@ -753,6 +881,7 @@ function startDrag(item, startX, startY) {
     document.removeEventListener('mouseup',   onMouseUp);
     document.removeEventListener('touchmove', onTouchMove);
     document.removeEventListener('touchend',  onTouchEnd);
+    ghost.remove();
     if (!dragSrc) return;
     dragSrc.classList.remove('dragging');
     if (indicator && indicator.parentNode) {
@@ -788,28 +917,35 @@ function setFilter(tag, btn) {
 /* ── Build UI ────────────────────────────────────────────── */
 const knownFilterTags = new Set();
 
+// Display labels for well-known tags; unknown tags fall back to capitalised slug
+const TAG_LABELS = {
+  all:       'All Phases',
+  general:   'General',
+  varlamore: 'Varlamore',
+  karamja:   'Karamja',
+  skilling:  'Skilling',
+  combat:    'Combat',
+  endgame:   'Endgame',
+};
+
 function buildFilters() {
   const row = document.getElementById('filterRow');
-  const filters = [
-    { tag: 'all',       label: 'All Phases' },
-    { tag: 'general',   label: 'General'    },
-    { tag: 'varlamore', label: 'Varlamore'  },
-    { tag: 'karamja',   label: 'Karamja'    },
-    { tag: 'skilling',  label: 'Skilling'   },
-    { tag: 'combat',    label: 'Combat'     },
-    { tag: 'endgame',   label: 'Endgame'    },
-  ];
-  for (const f of filters) {
-    knownFilterTags.add(f.tag);
-    const btn = document.createElement('button');
-    btn.className   = 'filter-btn' + (f.tag === 'all' ? ' active' : '');
-    btn.textContent = f.label;
-    btn.onclick     = () => setFilter(f.tag, btn);
-    row.appendChild(btn);
+
+  // Derive tag list from the phases that actually exist after deletions are applied.
+  // This ensures Clear All removes orphaned filter buttons automatically.
+  const tags = ['all'];
+  for (const p of PHASES) {
+    if (!tags.includes(p.tag)) tags.push(p.tag);
   }
-  // Restore filter buttons for any imported phases with new tags
-  for (const p of importedPhases) {
-    if (!knownFilterTags.has(p.tag)) addFilterTag(p.tag);
+
+  for (const tag of tags) {
+    knownFilterTags.add(tag);
+    const label = TAG_LABELS[tag] || (tag.charAt(0).toUpperCase() + tag.slice(1));
+    const btn   = document.createElement('button');
+    btn.className   = 'filter-btn' + (tag === 'all' ? ' active' : '');
+    btn.textContent = label;
+    btn.onclick     = () => setFilter(tag, btn);
+    row.appendChild(btn);
   }
 }
 
@@ -832,19 +968,25 @@ function buildTaskItem(p, t) {
   item.dataset.key      = key;
   item.dataset.taskName = t.name;
   item.onclick = e => {
-    if (e.target.closest('.drag-handle')) return;
+    if (e.target.closest('.drag-handle') || e.target.closest('.delete-task-btn')) return;
     toggleTask(key, item);
   };
+  const ptsBadge = t.pts ? `<span class="pts-badge ${ptsClass(t.pts)}">${t.pts}</span>` : '';
   item.innerHTML = `
     <div class="drag-handle" title="Drag to reorder">⠿</div>
+    <div class="delete-task-btn" title="Delete task">✕</div>
     <div class="task-check"><span class="check-mark">✓</span></div>
     <div class="task-content">
       <div class="task-name">${t.name}</div>
       <div class="task-desc">${t.desc}</div>
       ${t.req ? `<div class="task-req">${t.req}</div>` : ''}
     </div>
-    <span class="pts-badge ${ptsClass(t.pts)}">${t.pts}</span>
+    ${ptsBadge}
   `;
+  item.querySelector('.delete-task-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    deleteTask(p.id, t.name, item);
+  });
   attachDragHandlers(item);
   return item;
 }
@@ -852,8 +994,8 @@ function buildTaskItem(p, t) {
 function buildPhaseSection(p) {
   const container = document.getElementById('phasesContainer');
   const tasks  = orderedTasks(p);
-  const earned = tasks.filter(t => done.has(taskKey(p.id, t.name))).reduce((s, t) => s + t.pts, 0);
-  const total  = tasks.reduce((s, t) => s + t.pts, 0);
+  const earned = tasks.filter(t => done.has(taskKey(p.id, t.name))).reduce((s, t) => s + (t.pts || 0), 0);
+  const total  = tasks.reduce((s, t) => s + (t.pts || 0), 0);
 
   const section = document.createElement('div');
   section.className = 'phase' + (collapseState[p.id] ? ' collapsed' : '');
@@ -865,10 +1007,25 @@ function buildPhaseSection(p) {
       <span class="phase-pts-info" id="phase-pts-${p.id}">
         <span class="earned">${earned.toLocaleString()}</span> / ${total.toLocaleString()} pts
       </span>
+      <button class="add-task-btn" title="Add task to this phase">+</button>
+      <button class="import-phase-btn" title="Import CSV into this phase">Bulk Import Tasks</button>
+      <button class="delete-phase-btn" title="Delete phase">✕</button>
       <span class="phase-chevron">▾</span>
     </div>
     <div class="task-list-wrap"><div class="task-list" id="tl-${p.id}"></div></div>
   `;
+  section.querySelector('.add-task-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    openAddTaskModal(p.id);
+  });
+  section.querySelector('.import-phase-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    openImportModal(p.id);
+  });
+  section.querySelector('.delete-phase-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    deletePhase(p.id);
+  });
   container.appendChild(section);
 
   const list = section.querySelector('#tl-' + p.id);
@@ -879,11 +1036,204 @@ function buildPhases() {
   for (const p of PHASES) buildPhaseSection(p);
 }
 
+/* ── Add Phase Modal ─────────────────────────────────────── */
+function openAddPhaseModal() {
+  const nextNum = 'Phase ' + String(PHASES.length + 1).padStart(2, '0');
+  document.getElementById('addPhaseNum').value         = nextNum;
+  document.getElementById('addPhaseTitle').value       = '';
+  document.getElementById('addPhaseTag').value         = '';
+  document.getElementById('addPhaseError').textContent = '';
+  document.getElementById('addPhaseOverlay').classList.add('open');
+  document.getElementById('addPhaseTitle').focus();
+}
+
+function closeAddPhaseModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('addPhaseOverlay').classList.remove('open');
+}
+
+function doAddPhase() {
+  const num   = document.getElementById('addPhaseNum').value.trim();
+  const title = document.getElementById('addPhaseTitle').value.trim();
+  const tag   = document.getElementById('addPhaseTag').value.trim().toLowerCase() || 'general';
+  const errEl = document.getElementById('addPhaseError');
+  errEl.textContent = '';
+
+  if (!title) { errEl.textContent = 'Title is required.'; return; }
+
+  const id    = 'p_imp_' + Date.now();
+  const label = num || ('Phase ' + String(PHASES.length + 1).padStart(2, '0'));
+  const phase = { id, num: label, title, tag, tasks: [] };
+  PHASES.push(phase);
+  importedPhases.push(phase);
+  saveImportedPhases();
+  buildPhaseSection(phase);
+  addFilterTag(tag);
+  updateStats();
+  closeAddPhaseModal();
+}
+
+/* ── Reload defaults ─────────────────────────────────────── */
+function reloadDefaults() {
+  if (!confirm('Restore all default phases?\n\nDeleted default phases will reappear. Your progress, custom phases, and extra tasks will be kept.')) return;
+  localStorage.removeItem(DELETED_PHASES_KEY);
+  location.reload();
+}
+
+/* ── Add Task Modal ──────────────────────────────────────── */
+let addTaskTargetPhaseId = null;
+
+function openAddTaskModal(phaseId) {
+  addTaskTargetPhaseId = phaseId;
+  const phase = PHASES.find(p => p.id === phaseId);
+  if (!phase) return;
+  document.getElementById('addTaskPhaseName').textContent = phase.num + ' — ' + phase.title;
+  document.getElementById('addTaskName').value        = '';
+  document.getElementById('addTaskDesc').value        = '';
+  document.getElementById('addTaskReq').value         = '';
+  document.getElementById('addTaskPts').value         = '';
+  document.getElementById('addTaskError').textContent = '';
+  document.getElementById('addTaskOverlay').classList.add('open');
+  document.getElementById('addTaskName').focus();
+}
+
+function closeAddTaskModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('addTaskOverlay').classList.remove('open');
+}
+
+function doAddTask() {
+  const name   = document.getElementById('addTaskName').value.trim();
+  const desc   = document.getElementById('addTaskDesc').value.trim();
+  const req    = document.getElementById('addTaskReq').value.trim() || null;
+  const ptsRaw = document.getElementById('addTaskPts').value;
+  const pts    = ptsRaw ? parseInt(ptsRaw, 10) : null;
+  const errEl  = document.getElementById('addTaskError');
+  errEl.textContent = '';
+
+  if (!name) { errEl.textContent = 'Name is required.'; return; }
+  if (!desc) { errEl.textContent = 'Description is required.'; return; }
+
+  const phase = PHASES.find(p => p.id === addTaskTargetPhaseId);
+  if (!phase) return;
+
+  if (phase.tasks.some(t => t.name === name)) {
+    errEl.textContent = 'A task with this name already exists in this phase.';
+    return;
+  }
+
+  const task = { name, desc, req, pts };
+  phase.tasks.push(task);
+
+  const isImportedPhase = importedPhases.some(p => p.id === addTaskTargetPhaseId);
+  if (isImportedPhase) {
+    saveImportedPhases();
+  } else {
+    if (!extraTasks[addTaskTargetPhaseId]) extraTasks[addTaskTargetPhaseId] = [];
+    extraTasks[addTaskTargetPhaseId].push(task);
+    saveExtraTasks();
+  }
+
+  const list = document.getElementById('tl-' + addTaskTargetPhaseId);
+  if (list) list.appendChild(buildTaskItem(phase, task));
+
+  updateStats();
+  updatePhaseTotals();
+  closeAddTaskModal();
+}
+
+/* ── Clear / Export / Import JSON ────────────────────────── */
+const ALL_KEYS = [
+  STORAGE_KEY, ORDER_KEY, IMPORTED_KEY, EXTRA_KEY,
+  COLLAPSE_KEY, DELETED_PHASES_KEY, DELETED_TASKS_KEY,
+];
+
+function clearAll() {
+  const phaseCount = PHASES.length;
+  const taskCount  = PHASES.reduce((s, p) => s + p.tasks.length, 0);
+  if (!confirm(
+    `Reset everything?\n\n` +
+    `This will remove all ${phaseCount} phase(s) and ${taskCount} task(s) ` +
+    `and clear your progress.\n\nThis cannot be undone.`
+  )) return;
+
+  // Determine which phase IDs are hardcoded (not user-imported).
+  // Imported phases are cleared by removing IMPORTED_KEY, but hardcoded
+  // phases reload from source — so we must mark them deleted explicitly.
+  const importedIds   = new Set(importedPhases.map(p => p.id));
+  const hardcodedIds  = PHASES.filter(p => !importedIds.has(p.id)).map(p => p.id);
+
+  for (const key of ALL_KEYS) localStorage.removeItem(key);
+
+  if (hardcodedIds.length) {
+    localStorage.setItem(DELETED_PHASES_KEY, JSON.stringify(hardcodedIds));
+  }
+
+  location.reload();
+}
+
+function exportJSON() {
+  const data = {};
+  for (const key of ALL_KEYS) {
+    const raw = localStorage.getItem(key);
+    if (raw !== null) {
+      try { data[key] = JSON.parse(raw); } catch (e) { data[key] = raw; }
+    }
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'taskplanner-export.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importJSON() {
+  document.getElementById('jsonFileInput').click();
+}
+
+function onJSONFileSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';   // allow re-selecting the same file
+
+  const reader = new FileReader();
+  reader.onload = evt => {
+    let data;
+    try { data = JSON.parse(evt.target.result); }
+    catch { alert('Invalid JSON file — could not parse.'); return; }
+
+    if (typeof data !== 'object' || Array.isArray(data) || data === null) {
+      alert('Invalid export format — expected a JSON object.');
+      return;
+    }
+    if (!ALL_KEYS.some(k => k in data)) {
+      alert('This file does not appear to be a valid Task Planner export.');
+      return;
+    }
+    if (!confirm('Import this file? Your current phases and progress will be replaced.')) return;
+
+    for (const key of ALL_KEYS) localStorage.removeItem(key);
+    for (const key of ALL_KEYS) {
+      if (key in data) {
+        try { localStorage.setItem(key, JSON.stringify(data[key])); } catch (e) {}
+      }
+    }
+    location.reload();
+  };
+  reader.readAsText(file);
+}
+
 /* ── Init ────────────────────────────────────────────────── */
 loadDone();
 loadOrder();
 loadImportedPhases();
 loadExtraTasks();
+loadDeletedState();
+applyDeletedState();
 loadCollapseState();
 buildFilters();
 buildPhases();

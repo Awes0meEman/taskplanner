@@ -515,12 +515,24 @@ body.edit-mode .task-item .pts-badge {
   pointer-events: none;
 }
 
-/* Dragging ghost */
+/* Source placeholder while dragging — invisible but holds layout space */
 .task-item.dragging {
-  opacity: 0.35;
-  border-style: dashed;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Floating clone that follows the cursor */
+.drag-ghost {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0.92;
   border-color: var(--gold2) !important;
   background: var(--bg4) !important;
+  box-shadow: 0 10px 32px rgba(0,0,0,0.55), 0 0 0 1px var(--gold2);
+  transform: rotate(1.2deg) scale(1.02);
+  transition: transform 0.05s ease;
+  border-radius: 6px;
 }
 
 /* Drop indicator line */
@@ -847,6 +859,162 @@ body.edit-mode .edit-banner { display: block; }
   opacity: 0.35;
   cursor: not-allowed;
 }
+
+/* ── Control bar extras (export / import / clear) ────────── */
+.ctrl-add-phase,
+.ctrl-reload-defaults,
+.ctrl-export,
+.ctrl-import-json,
+.ctrl-clear {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.ctrl-add-phase,
+.ctrl-reload-defaults,
+.ctrl-export,
+.ctrl-import-json {
+  color: var(--text2);
+}
+
+.ctrl-add-phase:hover,
+.ctrl-reload-defaults:hover,
+.ctrl-export:hover,
+.ctrl-import-json:hover {
+  border-color: var(--border2);
+  background: var(--bg3);
+  color: var(--text);
+}
+
+.ctrl-clear {
+  color: var(--accent);
+  border-color: rgba(196,64,90,0.25);
+}
+
+.ctrl-clear:hover {
+  background: var(--accent-glow);
+  border-color: var(--accent2);
+}
+
+.ctrl-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ── Add task button (phase header) ─────────────────────── */
+.add-task-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text3);
+  font-size: 17px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.add-task-btn:hover {
+  color: var(--gold);
+  border-color: var(--gold2);
+  background: var(--gold-glow);
+}
+
+.import-phase-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text3);
+  font-size: 9px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 5px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.import-phase-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent2);
+  background: var(--accent-glow);
+}
+
+/* Modal subtitle (phase name shown under the modal heading) */
+.modal-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-top: 3px;
+}
+
+/* ── Delete buttons (edit mode) ──────────────────────────── */
+.delete-phase-btn {
+  display: none;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text3);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 7px;
+  margin-left: 4px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.delete-phase-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent2);
+  background: var(--accent-glow);
+}
+
+body.edit-mode .delete-phase-btn { display: inline-flex; align-items: center; }
+
+.delete-task-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  min-width: 20px;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.delete-task-btn:hover { color: var(--accent); }
+
+body.edit-mode .delete-task-btn { display: flex; }
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 600px) {
