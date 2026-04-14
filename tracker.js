@@ -672,6 +672,15 @@ function parseCSV(text) {
 }
 
 /* ── Import modal ────────────────────────────────────────── */
+function openHelpModal() {
+  document.getElementById('helpOverlay').classList.add('open');
+}
+
+function closeHelpModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('helpOverlay').classList.remove('open');
+}
+
 function openImportModal(phaseId) {
   const sel = document.getElementById('importPhaseSelect');
   sel.innerHTML = '';

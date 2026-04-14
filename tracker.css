@@ -90,6 +90,64 @@ h1 span { color: var(--accent); }
   margin-bottom: 2rem;
 }
 
+/* ── Help button ─────────────────────────────────────────── */
+.help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: none;
+  border: 1.5px solid var(--border2);
+  border-radius: 50%;
+  color: var(--text3);
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.6rem;
+  margin-bottom: 1.25rem;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.help-btn:hover {
+  color: var(--gold);
+  border-color: var(--gold2);
+  background: var(--gold-glow);
+}
+
+/* ── Help modal content ──────────────────────────────────── */
+.help-body {
+  gap: 1.25rem;
+}
+
+.help-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.help-section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.help-body p {
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 1.55;
+}
+
+.help-body em {
+  font-style: normal;
+  color: var(--text);
+  font-weight: 600;
+}
+
 /* ── Stats bar ───────────────────────────────────────────── */
 .stats-bar {
   display: flex;

@@ -15,6 +15,7 @@
     <div class="header-eyebrow">Old School RuneScape</div>
     <h1>Demonic <span>Pacts</span> League</h1>
     <div class="header-sub">Optimal task route tracker</div>
+    <button class="help-btn" onclick="openHelpModal()" title="How to use this tracker">?</button>
 
     <div class="stats-bar">
       <div class="stat-cell">
@@ -91,6 +92,45 @@
     Progress saved in your browser. Tasks sourced from the Demonic Pacts League CSV. Good luck, adventurer.
   </footer>
 
+</div>
+
+<!-- Help Modal -->
+<div class="modal-overlay" id="helpOverlay" onclick="closeHelpModal(event)">
+  <div class="modal" id="helpModal">
+    <div class="modal-header">
+      <h2>How to Use</h2>
+      <button class="modal-close" onclick="closeHelpModal()">✕</button>
+    </div>
+    <div class="modal-body help-body">
+      <div class="help-section">
+        <div class="help-section-title">Completing Tasks</div>
+        <p>Click any task to mark it complete. Click again to undo. Completed tasks turn green and are crossed out. Your progress is automatically saved in your browser.</p>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Points &amp; Badges</div>
+        <p>Each task has a point value shown as a coloured badge on the right. The header bar tracks your total points earned and overall completion percentage.</p>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Filtering &amp; Hiding</div>
+        <p>Use the tag buttons at the top of the controls to filter phases by category. Toggle <em>Hide completed</em> to collapse finished tasks out of view.</p>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Reordering Tasks</div>
+        <p>Click <em>Edit</em> to enter edit mode. Drag the handle on the left of any task to reorder it within its phase. Click <em>Edit</em> again to exit. In edit mode you can also add or delete tasks and phases.</p>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Adding &amp; Importing</div>
+        <p><em>Add Phase</em> creates a new empty phase. Use the <em>+</em> button on a phase header (in edit mode) to add individual tasks, or <em>Import CSV</em> to bulk-import tasks from a spreadsheet.</p>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Export &amp; Backup</div>
+        <p><em>Export</em> downloads all your phases and progress as a JSON file. <em>Import</em> restores from that file. <em>Defaults</em> reloads the original built-in task list. <em>Clear All</em> removes everything.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-import" onclick="closeHelpModal()">Got it</button>
+    </div>
+  </div>
 </div>
 
 <!-- Import Modal -->
