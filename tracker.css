@@ -1,6 +1,6 @@
 /* ============================================================
    tracker.css — WCAG AA Compliant Version
-   
+
    CONTRAST CHANGES SUMMARY:
    --text3:   #7a5f52 → #a08878  (raised to ≥4.5:1 on --bg/--bg2)
    --text2:   #b89a87 → #c8aa97  (slight raise for edge cases)
@@ -290,6 +290,7 @@ h1 span { color: var(--accent); }   /* 5.2:1 ✓ */
   flex-wrap: wrap;
   gap: 6px;
   flex: 1;
+  padding: 5px 12px;
 }
 
 .filter-btn {

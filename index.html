@@ -48,7 +48,6 @@
   </header>
 
   <div class="controls">
-    <div class="filter-row" id="filterRow"></div>
     <button class="toggle-hide" id="hideBtn" onclick="toggleHide()">
       <span class="toggle-icon" id="hideIcon"></span>
       Hide completed
@@ -83,13 +82,14 @@
     </button>
     <input type="file" id="jsonFileInput" accept=".json,application/json" style="display:none" onchange="onJSONFileSelected(event)">
   </div>
+  <div class="filter-row" id="filterRow"></div>
 
   <div class="edit-banner">✦ Edit mode — drag tasks to reorder ✦</div>
 
   <div id="phasesContainer"></div>
 
   <footer>
-    Progress saved in your browser. Tasks sourced from the Demonic Pacts League CSV. Good luck, adventurer.
+    Progress saved in your browser. Tasks sourced from Faux's Day 1 Guide. Good luck, adventurer.
   </footer>
 
 </div>
