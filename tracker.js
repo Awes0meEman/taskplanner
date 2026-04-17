@@ -408,11 +408,11 @@ function updateStats() {
   document.getElementById('statPts').textContent   = earnedPts.toLocaleString();
   document.getElementById('statTotal').textContent = totalPts.toLocaleString();
   document.getElementById('statDone').textContent  = doneTasks + ' / ' + totalTasks;
-  const pct = totalPts > 0 ? Math.round(earnedPts / totalPts * 100) : 0;
+  const pct = totalTasks > 0 ? Math.round(doneTasks / totalTasks * 100) : 0;
   document.getElementById('statPct').textContent      = pct + '%';
   document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('progressLabel').textContent =
-    earnedPts.toLocaleString() + ' / ' + totalPts.toLocaleString() + ' pts';
+    doneTasks.toLocaleString() + ' / ' + totalTasks.toLocaleString() + ' pts';
 }
 
 function updatePhaseTotals() {
@@ -973,6 +973,7 @@ function buildPhaseSection(p) {
       </span>
       <button class="add-task-btn" title="Add task to this phase">+</button>
       <button class="import-phase-btn" title="Import CSV into this phase">Bulk Import Tasks</button>
+      <button class="export-phase-btn" title="Export phase as JSON">↓ Export</button>
       <button class="delete-phase-btn" title="Delete phase">✕</button>
       <span class="phase-chevron">▾</span>
     </div>
@@ -985,6 +986,10 @@ function buildPhaseSection(p) {
   section.querySelector('.import-phase-btn').addEventListener('click', e => {
     e.stopPropagation();
     openImportModal(p.id);
+  });
+  section.querySelector('.export-phase-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    exportPhaseJSON(p.id);
   });
   section.querySelector('.delete-phase-btn').addEventListener('click', e => {
     e.stopPropagation();
@@ -1134,6 +1139,22 @@ function clearAll() {
   }
 
   location.reload();
+}
+
+function exportPhaseJSON(phaseId) {
+  const phase = PHASES.find(p => p.id === phaseId);
+  if (!phase) return;
+  const data = { id: phase.id, num: phase.num, title: phase.title, tag: phase.tag, tasks: phase.tasks };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  const safeName = phase.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  a.download = 'phase-' + safeName + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function exportJSON() {

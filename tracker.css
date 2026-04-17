@@ -1047,6 +1047,31 @@ body.edit-mode .edit-banner { display: block; }
   background: var(--accent-glow);
 }
 
+.export-phase-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text3);
+  font-size: 9px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 5px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.export-phase-btn:hover {
+  color: var(--gold);
+  border-color: var(--gold2);
+  background: var(--gold-glow);
+}
+
 
 /* Modal subtitle (phase name shown under the modal heading) */
 .modal-subtitle {
