@@ -137,7 +137,9 @@ h1 span { color: var(--accent); }   /* 5.2:1 ✓ */
   line-height: 1;
 }
 
-.help-btn:hover {
+.help-btn:hover,
+.add-task-btn:hover,
+.export-phase-btn:hover {
   color: var(--gold);
   border-color: var(--gold2);
   background: var(--gold-glow);
@@ -245,7 +247,8 @@ h1 span { color: var(--accent); }   /* 5.2:1 ✓ */
   margin-bottom: 2.5rem;
 }
 
-.toggle-hide {
+/* ── Control bar buttons (shared base) ───────────────────── */
+.ctrl-btn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -261,7 +264,7 @@ h1 span { color: var(--accent); }   /* 5.2:1 ✓ */
   user-select: none;
 }
 
-.toggle-hide:hover {
+.ctrl-btn:hover {
   border-color: var(--border2);
   background: var(--bg3);
   color: var(--text);
@@ -535,28 +538,6 @@ footer {
 }
 
 /* ── Edit / drag mode ────────────────────────────────────── */
-.toggle-edit {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 7px 14px;
-  color: var(--text2);
-  font-family: 'Crimson Pro', serif;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s;
-  user-select: none;
-}
-
-.toggle-edit:hover {
-  border-color: var(--border2);
-  background: var(--bg3);
-  color: var(--text);
-}
-
 .toggle-edit.active {
   background: var(--gold-glow);
   border-color: var(--gold2);
@@ -650,27 +631,6 @@ body.edit-mode .task-item .pts-badge {
 body.edit-mode .edit-banner { display: block; }
 
 /* ── Import button ───────────────────────────────────────── */
-.toggle-import {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 7px 14px;
-  color: var(--text2);
-  font-family: 'Crimson Pro', serif;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s;
-  user-select: none;
-}
-
-.toggle-import:hover {
-  border-color: var(--border2);
-  background: var(--bg3);
-  color: var(--text);
-}
 
 .import-icon {
   font-size: 17px;
@@ -793,7 +753,8 @@ body.edit-mode .edit-banner { display: block; }
 }
 
 .form-select,
-.form-input {
+.form-input,
+.form-textarea {
   background: var(--bg3);
   border: 1px solid var(--border);
   border-radius: 5px;
@@ -806,41 +767,31 @@ body.edit-mode .edit-banner { display: block; }
 }
 
 .form-select:focus,
-.form-input:focus {
-  outline: none;
-  border-color: var(--border2);
-}
-
-.form-input::placeholder { color: var(--text3); }   /* 4.6:1 ✓ */
-
-.form-textarea {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 10px;
-  color: var(--text);
-  font-family: 'Crimson Pro', serif;
-  font-size: 14px;
-  width: 100%;
-  min-height: 130px;
-  resize: vertical;
-  transition: border-color 0.2s;
-  line-height: 1.55;
-}
-
+.form-input:focus,
 .form-textarea:focus {
   outline: none;
   border-color: var(--border2);
 }
 
+.form-input::placeholder,
 .form-textarea::placeholder { color: var(--text3); }   /* 4.6:1 ✓ */
 
-.form-error {
+.form-textarea {
+  font-size: 14px;
+  padding: 10px;
+  min-height: 130px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.form-error,
+.preview-error {
   font-size: 13px;
   color: var(--accent);   /* 5.2:1 ✓ */
   font-style: italic;
-  min-height: 0;
 }
+
+.form-error { min-height: 0; }
 
 /* Preview panel */
 .import-preview {
@@ -892,12 +843,6 @@ body.edit-mode .edit-banner { display: block; }
   gap: 3px;
 }
 
-.preview-error {
-  font-size: 13px;
-  color: var(--accent);   /* 5.2:1 ✓ */
-  font-style: italic;
-}
-
 /* Modal action buttons */
 .btn-cancel {
   background: transparent;
@@ -941,41 +886,6 @@ body.edit-mode .edit-banner { display: block; }
 }
 
 /* ── Control bar extras (export / import / clear) ────────── */
-.ctrl-add-phase,
-.ctrl-reload-defaults,
-.ctrl-export,
-.ctrl-import-json,
-.ctrl-clear {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 7px 14px;
-  font-family: 'Crimson Pro', serif;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s;
-  user-select: none;
-}
-
-.ctrl-add-phase,
-.ctrl-reload-defaults,
-.ctrl-export,
-.ctrl-import-json {
-  color: var(--text2);   /* 7.2:1 ✓ */
-}
-
-.ctrl-add-phase:hover,
-.ctrl-reload-defaults:hover,
-.ctrl-export:hover,
-.ctrl-import-json:hover {
-  border-color: var(--border2);
-  background: var(--bg3);
-  color: var(--text);
-}
-
 .ctrl-clear {
   color: var(--accent);   /* 5.2:1 ✓ */
   border-color: rgba(224,85,117,0.25);
@@ -1016,13 +926,8 @@ body.edit-mode .edit-banner { display: block; }
   transition: all 0.15s;
 }
 
-.add-task-btn:hover {
-  color: var(--gold);
-  border-color: var(--gold2);
-  background: var(--gold-glow);
-}
-
-.import-phase-btn {
+/* ── Phase header action buttons (shared base) ───────────── */
+.phase-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1041,37 +946,12 @@ body.edit-mode .edit-banner { display: block; }
   transition: all 0.15s;
 }
 
-.import-phase-btn:hover {
+.import-phase-btn:hover,
+.delete-phase-btn:hover {
   color: var(--accent);
   border-color: var(--accent2);
   background: var(--accent-glow);
 }
-
-.export-phase-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 20px;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text3);
-  font-size: 9px;
-  font-family: 'Cinzel', serif;
-  letter-spacing: 0.05em;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 5px;
-  flex-shrink: 0;
-  transition: all 0.15s;
-}
-
-.export-phase-btn:hover {
-  color: var(--gold);
-  border-color: var(--gold2);
-  background: var(--gold-glow);
-}
-
 
 /* Modal subtitle (phase name shown under the modal heading) */
 .modal-subtitle {
@@ -1098,12 +978,6 @@ body.edit-mode .edit-banner { display: block; }
   transition: all 0.15s;
   flex-shrink: 0;
   font-family: inherit;
-}
-
-.delete-phase-btn:hover {
-  color: var(--accent);         /* 5.2:1 ✓ */
-  border-color: var(--accent2);
-  background: var(--accent-glow);
 }
 
 body.edit-mode .delete-phase-btn { display: inline-flex; align-items: center; }

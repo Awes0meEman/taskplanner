@@ -48,35 +48,35 @@
   </header>
 
   <div class="controls">
-    <button class="toggle-hide" id="hideBtn" onclick="toggleHide()">
+    <button class="toggle-hide ctrl-btn" id="hideBtn" onclick="toggleHide()">
       <span class="toggle-icon" id="hideIcon"></span>
       Hide completed
     </button>
-    <button class="toggle-edit" id="editBtn" onclick="toggleEditMode()">
+    <button class="toggle-edit ctrl-btn" id="editBtn" onclick="toggleEditMode()">
       <span class="edit-icon">⠿</span>
       Edit
     </button>
-    <button class="toggle-import" onclick="openImportModal()">
+    <button class="toggle-import ctrl-btn" onclick="openImportModal()">
       <span class="import-icon">+</span>
       Import CSV
     </button>
-    <button class="ctrl-add-phase" onclick="openAddPhaseModal()" title="Create a new empty phase">
+    <button class="ctrl-add-phase ctrl-btn" onclick="openAddPhaseModal()" title="Create a new empty phase">
       <span class="ctrl-icon">+</span>
       Add Phase
     </button>
-    <button class="ctrl-reload-defaults" onclick="reloadDefaults()" title="Restore the original hardcoded phases">
+    <button class="ctrl-reload-defaults ctrl-btn" onclick="reloadDefaults()" title="Restore the original hardcoded phases">
       <span class="ctrl-icon">↺</span>
       Defaults
     </button>
-    <button class="ctrl-export" onclick="exportJSON()" title="Download all phases and progress as a JSON file">
+    <button class="ctrl-export ctrl-btn" onclick="exportJSON()" title="Download all phases and progress as a JSON file">
       <span class="ctrl-icon">↓</span>
       Export
     </button>
-    <button class="ctrl-import-json" onclick="importJSON()" title="Restore from a previously exported JSON file">
+    <button class="ctrl-import-json ctrl-btn" onclick="importJSON()" title="Restore from a previously exported JSON file">
       <span class="ctrl-icon">↑</span>
       Import
     </button>
-    <button class="ctrl-clear" onclick="clearAll()" title="Remove all phases and reset progress">
+    <button class="ctrl-clear ctrl-btn" onclick="clearAll()" title="Remove all phases and reset progress">
       <span class="ctrl-icon">✕</span>
       Clear All
     </button>
@@ -89,7 +89,7 @@
   <div id="phasesContainer"></div>
 
   <footer>
-    Progress saved in your browser. Tasks sourced from Faux's Day 1 Guide. Good luck, adventurer.
+      Progress saved in your browser. Tasks sourced from <a href="https://pastebin.com/bG3SfLUw">Faux's Day 1 Guide</a>. Good luck, adventurer.
   </footer>
 
 </div>
@@ -258,6 +258,7 @@
   </div>
 </div>
 
+<script src="phases.js"></script>
 <script src="tracker.js"></script>
 
 </body>
